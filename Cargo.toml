@@ -1,20 +1,41 @@
 [package]
-name = "cmsc818l_project"
-version = "0.1.0"
+name = "merkle-tree-example"
+version = "0.3.0"
+authors = ["arkworks contributors"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-arkworks-gadgets = "0.3"
-arkworks-utils = "1.0.0"
-ark-r1cs-std = "0.3"
-ark-crypto-primitives = "0.3"
-ark-poly-commit = "0.3"
-ark-ff = "0.3"
-ark-ec = "0.3"
-ark-relations = "0.3"
-ark-std = "0.3"
-ark-marlin = "0.3"
-ark-bls12-381 = "0.3"
-ark-groth16 = "0.3.0"
+ark-ff = { version = "0.4", default-features = false }
+ark-ec = { version = "0.4", default-features = false }
+ark-ed-on-bls12-381 = { version = "0.4", features = ["r1cs"] }
+ark-bls12-381 = { version = "0.4.0" }
+ark-std = { version = "0.4", default-features = false }
+ark-relations = { version = "0.4", default-features = false  }
+
+ark-r1cs-std = { version = "0.4", default-features = false }
+ark-snark = { version = "0.4", default-features = false }
+
+ark-serialize = { version = "0.4.0" }
+
+tracing = { version = "0.1", default-features = false, features = [ "attributes" ] }
+tracing-subscriber = { version = "0.2" }
+rand = "0.8.5"
+zbase32 = "0.1.2"
+
+[dependencies.ark-groth16]
+git = "https://github.com/rozbb/groth16.git"
+rev = "ae6fa28"
+
+[dependencies.ark-crypto-primitives]
+git = "https://github.com/arkworks-rs/crypto-primitives.git"
+rev = "4b3bdac"
+default-features = true
+features = [ "r1cs", "crh", "merkle_tree" ]
+
+[[bin]]
+name = "prove"
+path = "src/bin/prove.rs"
+
+[lib]
+name = "arkworks_merkle_tree_example"
+path = "src/lib.rs"

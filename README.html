@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Fantastic Snarks HW1</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="gh.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Fantastic Snarks HW1</h1>
+</header>
+<h1 id="insuring-baseball-cards-in-zero-knowledge">Insuring baseball
+cards in zero-knowledge</h1>
+<p>In this project we will build a system for proving possession and
+details about a baseball card in a public purchase ledger
+<em>without</em> revealing which card you’re talking about. Yes this is
+silly. Extra credit for this homework is to find a better metaphor for
+the code I already have written.</p>
+<p>Our goal is to familiarize ourselves with the workflow of writing
+zero-knowledge proofs in the <a
+href="https://github.com/arkworks-rs/">arkworks</a> ecosystem. We will
+learn how to build zero-knowledge circuits, prove openings to
+cryptographic commitments, and prove membership in a Merkle tree. The
+purpose of this exercise is to make you feel comfortable playing with
+new ideas in arkworks. It is a massive framework, with lots of features,
+as well as weird sharp corners, so jumping right in might just be the
+best way to get started.</p>
+<h1 id="using-rust">Using Rust</h1>
+<p>TLDR:</p>
+<pre><code>curl --proto &#39;=https&#39; --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></pre>
+<p>Want to know more? <a
+href="https://www.rust-lang.org/learn/get-started">Install Rust.</a></p>
+<p>If you’re familiar with other languages and want a crash course in
+Rust, I like <a
+href="https://fasterthanli.me/articles/a-half-hour-to-learn-rust">this</a>
+tutorial. Beyond this, I don’t have specific recommendations. This <a
+href="https://gist.github.com/noxasaxon/7bf5ebf930e281529161e51cd221cf8a">meta-guide</a>
+has lots of resources for people of all incoming skill levels. Pick
+whatever suits your current comfort level and play with that. I’m
+looking for feedback here, so keep in mind what tutorials you tried and
+liked and disliked.</p>
+<p>For this assignment, it will be helpful to be comfortable with:</p>
+<ul>
+<li>The <a
+href="https://doc.rust-lang.org/stable/rust-by-example/error/result.html"><code>Result</code></a>
+type (including <code>unwrap()</code> and the <code>?</code>
+operator)</li>
+<li><a
+href="https://doc.rust-lang.org/book/ch05-01-defining-structs.html">Structs</a></li>
+<li><a
+href="https://doc.rust-lang.org/book/ch10-02-traits.html">Traits</a></li>
+</ul>
+<p>We strongly encourage you to use an IDE for this project. Whatever
+IDE you pick (e.g., Visual Code, Sublime, Neovim, Emacs), we recommend
+you install the <code>rust-analyzer</code> add-on. This will show you
+errors in the source code itself, which will save you from having to go
+back and forth between your editor and your <code>cargo test</code>
+output. It will also let you do language-level things like renaming
+variables, jumping to definitions, etc.</p>
+<h2 id="navigating-code-and-documentation">Navigating code and
+documentation</h2>
+<p>The canonical documentation site for all Rust crates is <a
+href="https://docs.rs">docs.rs</a>. If it exists, the docs are on
+docs.rs. But Arkworks is not the best documented library, and sometimes
+it is easiest to just use your IDE to jump to the definition of a struct
+or a trait in order to find out what methods it exposes. This will be
+your superpower.</p>
+<h2 id="getting-help">Getting help</h2>
+<p>Rust has a very large online community, and there are tons of
+channels to get help. Very few people actually know anything about
+Arkworks, so if you want answers, you should probably stick with
+language-level questions.</p>
+<ul>
+<li><a href="https://discord.gg/rust-lang">Rust Discord</a></li>
+<li><a href="https://rust-lang.zulipchat.com/">Rust Zulip</a></li>
+<li>Unofficial Rust Matrix Chat - <code>#rust:matrix.org</code></li>
+<li>Unofficial Rust IRC - <code>##rust</code> on <a
+href="https://libera.chat/">LiberaChat</a></li>
+</ul>
+<p>Standard messaging etiquette applies:</p>
+<ol type="1">
+<li>Do not ask to ask a question. Just ask.</li>
+<li>State your problem as clearly as possible. Ideally, reduce your
+problem to a minimum failing testcase, i.e., a small snippet of valid
+code that exemplifies your problem, and fails in the same way your real
+code fails. The <a href="https://play.rust-lang.org">Rust Playground</a>
+is a nice place to to construct a minimum failing testcase and share a
+link to.</li>
+<li>Do not spam the channel. It may take a while to get an answer. If it
+has been a long time since you asked and you’ve gotten no response, a
+single “bump” message is appropriate.</li>
+</ol>
+<p>Note: If you are reading this again because you are hitting a
+problem, at this point you may wish this assignment was not in Rust. The
+alternative was one of a few special purpose language for SNARKs. They
+are slightly simpler. But there is no community to ask for help at
+all.</p>
+<h1 id="cryptographic-preliminaries">Cryptographic preliminaries</h1>
+<p>A quick overview of the cryptographic components we use.</p>
+<ol type="1">
+<li>We model our public ledger as a Merkle tree. See <a
+href="https://pangea.cloud/docs/audit/merkle-trees">here</a> for a short
+overview on Merkle trees and tree membership proofs (aka
+<em>authentication paths</em>).</li>
+<li>The leaves of our Merkle tree are <em>cryptographic
+commitments</em>. We denote by <code>c = Com(val; com_rand)</code> a
+commitment to the value <code>val</code>, using the <em>commitment
+randomness</em> <code>com_rand</code>. We say that
+<code>(val, com_rand)</code> is the <em>opening</em> of <code>c</code>.
+In order to be secure, a commitment scheme must be:
+<ul>
+<li>Binding - This means that a commitment cannot be opened to a
+different value other than what was originally committed to. Concretely,
+if <code>c = Com(val; com_rand)</code> for some
+<code>val, com_rand</code>, and someone produces
+<code>val', com_rand'</code> such that
+<code>c = Com(val'; com_rand')</code>, then it must be the case that
+<code>val' = val</code> and <code>com_rand' = com_rand</code>.</li>
+<li>Hiding - This means that a commitment should say nothing about what
+is committed. In other words, for any choices of <code>val, val'</code>
+it should be impossible for an adversary to tell whether a given
+commitment <code>c</code> commits to <code>val</code> or
+<code>val'</code> (assuming the com_rand is sampled uniformly).</li>
+</ul></li>
+</ol>
+<p>An example of a secure commitment scheme is
+<code>Com(val; com_rand) = Hash(com_rand || val)</code> where
+<code>Hash</code> is a cryptographically secure hash function with
+certain properties (i.e., it is not vulnerable to length extension; so
+pick anything besides MD5, SHA-1, SHA-256 or SHA-512).</p>
+<p>Recall that the proof systems we use take an arithmetic circuit
+representing a computation that has private inputs, aka the
+<em>witness</em>, and public inputs. Some inputs will be constants,
+i.e., fixed by the circuit. For Groth16, there is a circuit-specific
+<em>proving key</em> (aka evaluation key) used by the prover, and a
+circuit-specific <em>verification key</em>. Your task is to assemble
+circuits that realize commitments, Merkle trees, etc. into a particular
+application.</p>
+<h1 id="intro">Intro</h1>
+<p>In this assignment, you will build a toy zcash-esque scheme for
+manipulating commitments in a Merkle tree. In this case, the objects
+will be baseball cards.</p>
+<p>A baseball card is a tuple which contains
+<code>(purchase_price, serial_num)</code>, i.e., the dollar amount that
+the card was bought for, and the serial number printed on it. There is a
+public ledger, represented as a Merkle tree, whose leaves are all the
+known authentic baseball cards, appearing in order of time of purchase.
+In order to hide the potentially sensitive values of these cards, we
+make the leaves <em>card commitments</em>, i.e., values of the form
+<code>Com((purchase_price, serial_num); com_rand)</code>.</p>
+<pre><code>      G = root
+    /   \
+  E      F
+ / \    / \
+A   B  C   D
+
+where
+    A = Com((amt1, serial1); com_rand1)
+    B = Com((amt2, serial2); com_rand2)
+    C = Com((amt3, serial3); com_rand3)
+    D = Com((amt4, serial4); com_rand4)</code></pre>
+<p>Now suppose every card is a collector’s item. They are quite rare.
+Lloyd’s of Linden (a New Jersey-based “insurance” company) is giving out
+a certificate of authenticity to anyone who can prove possession of a
+card. According to Lloyd’s a collector <em>possesses</em> a card if and
+only if they can prove that they know the card commitment’s opening, and
+that that commitment is in the Merkle tree. Proving this to Lloyd’s has
+some complications, though.</p>
+<p>The first issue is privacy. Obviously, simply revealing this
+information outright would leak both the position of the card in the
+tree (i.e., when the collector got the card) and the amount contained in
+the card. Neither of these are strictly necessary for Lloyd’s to know.
+The solution here is to instead use a zero-knowledge proof: “I know an
+<code>amount</code>, <code>serial_num</code>, and <code>com_rand</code>
+such that <code>Com((amount, serial_num); com_rand)</code> appears in
+the Merkle tree.”</p>
+<p>The second issue (which is caused by our solution to the first issue)
+is double-counting. As stated, there’s no way for Lloyd’s to tell if
+someone sent them 50 proofs for the same exact card. It should be the
+case that every card gets at most 1 certificate of authenticity. The
+solution we will use is to force a collector to reveal the serial number
+when presenting a proof of membership. In other words, the
+zero-knowledge proof statement is now “I know an <code>amount</code> and
+<code>com_rand</code> such that
+<code>Com((amount, serial_num); com_rand)</code> appears in the Merkle
+tree”, where <code>serial_num</code> is known to both the prover and
+verifier.</p>
+<p>Our final proof statement has two steps: proving knowledge of an
+opening to a commitment, and proving membership in a Merkle tree. We
+will step through how each of these works in the Arkworks zero-knowledge
+proof ecosystem.</p>
+<h1 id="assignment">Assignment</h1>
+<p>A partial implementation of our statement above is given in
+<code>src/constraints.rs</code> in the
+<code>PossessionCircuit::generate_constraints</code> method. Of the
+three tests in that file, currently 2 fail.</p>
+<p>There’s plenty of other files in <code>src/</code> as well. Peak
+around and see what they’re doing. Hopefully the comments, as well as
+your code-jumping IDE will give you an idea of what’s happening. For
+example <code>src/lib.rs</code> has a nice native code example in
+<code>test_merkle_tree</code>. In this example, we create a bunch of
+random cards, and then make those leaves in a Merkle tree (using a
+Pedersen hash function). We then check that a claimed path for some leaf
+corresponds to a given root. In this assignment we will do this, and
+more, in zero-knowledge.</p>
+<p>The first two problems will require you to add some code to the
+<code>PossessionCircuit::generate_constraints</code> method.</p>
+<h2 id="how-to-submit">How to submit</h2>
+<p>Once you’ve done the problems (and optional extra credit), you will
+<strong>submit your homework as follows:</strong></p>
+<ol type="1">
+<li>Make a text file called <code>extra_credit.txt</code> and put it in
+the <code>src/</code> folder. In the text file, tell me how much (if
+any) of the extra credit you did (steps 1-4). I will not check your
+extra credit if you do not write this.</li>
+<li>Zip the <code>src/</code> folder and upload the zip file to ELMS. I
+should be able to unzip your submission into a fresh repo, and run
+<code>cargo test</code> and all the <code>cargo run</code> commands to
+check that everything is correct.</li>
+</ol>
+<p><strong>Do NOT zip the entire assignment folder.</strong> I do not
+want 40MB of garbage partial build files.</p>
+<h2 id="problem-1-proving-commitment-opening-in-zk">Problem 1: Proving
+commitment opening in ZK</h2>
+<p>We want to make sure that <code>PossessionCircuit</code> actually
+proves knowledge of the opening to the card commitment. To that end
+<code>card_soundness</code> test in <code>src/constraints.rs</code>
+checks that <code>PossessionCircuit</code> is not satisfied if you give
+it any random opening to a card commitment. The reason the test
+currently fails is because no commitment opening check is performed in
+<code>gneerate_constraints</code>.</p>
+<p>Fill in the code that goes below <code>CHECK #1</code>. This code
+should:</p>
+<ol type="1">
+<li>compute the commitment of <code>card_var</code>,</li>
+<li>enforce that the resulting commitment equals the claimed
+commitment.</li>
+</ol>
+<p>Once this is done, you can run <code>cargo test</code>. You will know
+you got it right when the <code>card_soundness</code> test passes. The
+<code>tree_soundness</code> test will still fail though (see next
+problem).</p>
+<p><em>Hint 1:</em> <code>card_var</code> already has a way of computing
+the commitment. Look at <code>src/card.rs</code>.</p>
+<p><em>Hint 2:</em> You need the circuit to enforce that two things are
+equal. Take a look at the <a
+href="https://docs.rs/ark-r1cs-std/0.4.0/ark_r1cs_std/eq/trait.EqGadget.html#method.enforce_equal"><code>EqGadget::enforce_equal</code></a>.
+Most types we care about implement <code>EqGadget</code>.</p>
+<h2 id="problem-2-proving-merkle-tree-membership-in-zk">Problem 2:
+Proving Merkle tree membership in ZK</h2>
+<p>We want to make sure that <code>PossessionCircuit</code> actually
+proves that the claimed card commitment appears in the Merkle tree. To
+that end, the <code>tree_soundness</code> test in
+<code>src/constraints.rs</code> checks that
+<code>PossessionCircuit</code> is not satisfied if you give it any
+random Merkle root. The reason the test currently fails is because no
+tree membership check is performed in
+<code>generate_constraints</code>.</p>
+<p>Fill in the code that goes below <code>CHECK #2</code>. This code
+should:</p>
+<ol type="1">
+<li>compute the root node of the Merkle authentication path,</li>
+<li>enforce that the resulting value equals the publicly known Merkle
+root.</li>
+</ol>
+<p>Once this is done, ensure the <code>tree_soundness</code> test
+passes. Now, <code>cargo test</code> should be all successes.</p>
+<p><em>Hint:</em> <code>auth_path_var</code> already has a way of
+computing the root. See <a
+href="https://github.com/arkworks-rs/crypto-primitives/blob/4b3bdac16443096b26426673bff409d4e78eec94/src/merkle_tree/constraints.rs#L191"><code>here</code></a>.</p>
+<h2 id="problem-3-groth16-proofs">Problem 3: Groth16 proofs</h2>
+<p>Up until now we’ve just been symbolically executing the circuits. In
+reality, we want collectors to compute their proof and give it, along
+with their serial number, to Lloyd’s. This involves a few steps:</p>
+<ol type="1">
+<li>Lloyd’s will generate the proving key for
+<code>PossessionCircuit</code>, and their Pedersen hash constants, and
+publish both.</li>
+<li>Collectors will prove ownership of their card and send the proof and
+commitment back to Lloyd’s.</li>
+<li>Lloyd’s will check the proofs with respect to the public input</li>
+</ol>
+<p>This will correspond to our files in the <code>src/bin/</code>
+directory. Specifically:</p>
+<ul>
+<li><code>src/bin/gen_params.rs</code> — This will generate the hashing
+parameters as well as the proving and verifying key of our circuit. It
+will write these to <code>pedersen_params.bin</code>,
+<code>possession_proving_key.bin</code>, and
+<code>possession_verifying_key</code>, respectively.</li>
+<li><code>src/bin/prove.rs</code> — This will use the above data, plus
+some secret knowledge about a card and its position in the Merkle tree,
+to create a Groth16 proof. It writes the proof and the card’s serial
+number to <code>possession_proof.bin</code> and
+<code>possession_revealed_serial.bin</code>, respectively.</li>
+<li><code>src/bin/verify.rs</code> — This will use the revealed serial
+number public knowledge of a Merkle root to verify the Groth16 proof
+computed above.</li>
+</ul>
+<p>For the sake of simplicity, we have hard-coded a Merkle tree in
+<code>src/util.rs</code>. <strong>We will assume everyone has a copy of
+the same Merkle tree.</strong> The Merkle root, which we will pass to
+the prover and verifier, is represented in base32 as
+<code>f5pj64oh3m6anguhjb5rhfugwe44ximao17ya3wgx1fbmg1iobmo</code>.</p>
+<h3 id="problem-3.1-generate-params">Problem 3.1: Generate params</h3>
+<p>The first step to deploying a proof system is to generate all the
+public values. This is includes: the details of the hash function we’re
+using, the Groth16 proving key, and the Groth16 verifying key.
+Generating the Groth16 proving/verifying keys of a circuit is a little
+bit easier than actually proving something. You’re not proving anything
+yet, you’re just defining the structure of the proof. So, in
+<code>gen_params.rs</code>, rather than constructing a circuit which is
+actually satisfied, we only need to construct a circuit <em>with the
+same shape</em> as the circuit we want satisfied. Concretely, this means
+that we can take a <code>PossessionCircuit</code> and fill it with
+arbitrary values, so long as they have right type/size as the values we
+want to use. Note: we still must give it the correct constants, because
+those values are baked into the circuit and cannot change in the
+future.</p>
+<p>Your task is to make up some arbitrary values and stick them into the
+<code>PossessionCircuit</code> definition in
+<code>src/bin/gen_params.rs</code> in the appropriate place. These
+locations are marked with <code>todo!()</code>. Once you’re done, the
+following command should succeed:</p>
+<pre><code>cargo run --release --bin gen_params</code></pre>
+<p>This will panic and abort until all <code>todo!()</code>s are filled
+in.</p>
+<p>Tip: if you remove the <code>--release</code> flag, proving will be
+slower, but it will also be easier to debug, as the proof compiler will
+be able to catch when you’re trying to prove something that’s false.</p>
+<p><em>Hint:</em> The field element type <code>F</code> implements <a
+href="https://docs.rs/ark-ff/0.3.0/ark_ff/trait.UniformRand.html#tymethod.rand"><code>UniformRand</code></a>.
+It also implements <a
+href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html"><code>Default</code></a>.</p>
+<h3 id="problem-3.2-prove-possession">Problem 3.2: Prove possession</h3>
+<p>This is the meat of the proof system. We must use the proving key,
+known public constants, and private inputs in order to generate a proof
+of possession of a baseball card. In this case, the private info
+(“witnesses”) is the commitment randomness for committing to the card
+and the Merkle authentication path proving membership in the tree. The
+proof will also be accompanied by whatever public inputs are necessary.
+In this case, the prover is revealing the card’s serial number. The
+proof will be saved in <code>possession_proof.bin</code> and the
+now-public serial will be saved in
+<code>possession_revealed_serial.bin</code>.</p>
+<p>Your task is to fill in the <code>todo!()</code> items in
+<code>src/bin/prove.rs</code> in order to make the proving procedure
+succeed. There’s only one line of computation here, and a few lines of
+filling in values. Remember, the things that go into the
+<code>PossessionCircuit</code> here are not like before: they MUST be
+values that make the circuit succeed. Once you’re done, the following
+command should succeed:</p>
+<pre><code>cargo run --release --bin prove -- \
+    pedersen_params.bin \
+    possession_proving_key.bin \
+    f5pj64oh3m6anguhjb5rhfugwe44ximao17ya3wgx1fbmg1iobmo</code></pre>
+<p>(note the <code>\</code> just tells your terminal that the command
+continues on the next line.) If you want to check if you’re proving an
+invalid statement, remove the <code>--release</code> flag. This will
+save you lots of headaches for the next problem. If you’re trying to
+verify a false statement, you’re gonna have a bad time.</p>
+<p><em>Hint:</em> You will need to make a <a
+href="https://github.com/arkworks-rs/crypto-primitives/blob/4b3bdac16443096b26426673bff409d4e78eec94/src/merkle_tree/mod.rs#L338">Merkle
+authentication path</a>. You already have the <code>tree</code>.</p>
+<p><em>Note:</em> Look at how <code>public_inputs</code> are generated
+in this file. Everything ends up being represented as field elements in
+order for our proof system to work. You’ll have to change this line in
+the extra credit.</p>
+<h3 id="problem-3.3-verify-possession">Problem 3.3 Verify
+possession</h3>
+<p>The final step is for Lloyd’s to verify the proofs that have been
+generated. Lloyd’s verifier will use the known, public Merkle root and
+the claimed serial number in order to determine whether the Groth16
+proof is valid.</p>
+<p>Verification is probably the simplest of the steps. For this problem,
+just fill out the single <code>todo!()</code> in `src/bin/verify.rs. You
+will have to serialize the public input to field elements, just like the
+prover did. Once you’re done, the following command should succeed, and
+output “Proof verified successfully”:</p>
+<pre><code>cargo run --release --bin verify -- \
+    possession_verifying_key.bin \
+    possession_proof.bin \
+    possession_revealed_serial.bin \
+    f5pj64oh3m6anguhjb5rhfugwe44ximao17ya3wgx1fbmg1iobmo</code></pre>
+<p><em>Hint:</em> Look how <code>prove.rs</code> defined
+<code>public_inputs</code>.</p>
+<h2 id="extra-credit-revealing-purchase-price">Extra credit: Revealing
+purchase price</h2>
+<p>Lloyd’s has changed their policy. They now require everyone to reveal
+the purchase price of their card. You will have to modify the entire
+proof system to have the purchase price as a public value. This is a lot
+of work! You’ll need to:</p>
+<ol type="1">
+<li>update <code>PossessionCircuit</code> to <em>input</em> (rather than
+<em>witness</em>) the purchase price.</li>
+<li>update <code>src/bin/prove.rs</code> to output the purchase price in
+addition to everything else</li>
+<li>update <code>src/bin/verify.rs</code> to read this tuple and use it
+as public input for verification</li>
+</ol>
+<p>In this extra credit, you do just that:</p>
+<ol type="1">
+<li>Copy <code>src/constraints.rs</code> to
+<code>src/constraints_showprice.rs</code> and put
+<code>mod constraints_showprice</code> in <code>lib.rs</code>. Rename
+the <code>PossessionCircuit</code> to
+<code>PossessionShowPriceCircuit</code>. Modify
+<code>PossessionShowAmtCircuit</code> to use
+<code>card_purchase_price</code> as a public input rather than a
+witness. This should not require updating tests.</li>
+<li>Copy <code>src/bin/gen_params.rs</code> to
+<code>src/bin/gen_params_showprice</code>. Make it use
+<code>PossessionShowPriceCircuit</code>. Its output files should not
+clash with the normal <code>gen_params.rs</code>, so make it output the
+proving/verifying keys to
+<code>possession_showamt_proving_key.bin</code> and
+<code>possession_showamt_verifying_key.bin</code>. You don’t need to
+change the Pedersen params filename. They are the same.</li>
+<li>Copy <code>src/bin/prove.rs</code> to
+<code>src/bin/prove_showprice.rs</code>. Make it use
+<code>PossessionShowPriceCircuit</code>. It should take in the file
+produced in the previous step. The prover should output the purchase
+price to <code>possession_purchase_price.bin</code>, and its proof to
+<code>possession_showprice_proof.bin</code>. The rest can stay the same
+if you want.</li>
+<li>Copy <code>src/bin/verify.rs</code> to
+<code>src/bin/verify_showprice.rs</code>. Make it use
+<code>PossessionShowPriceCircuit</code>. It should take in the proof
+generated above, as well as all the public inputs, PLUS the new public
+input in <code>possession_purchase_price.bin</code> (you’ll have to edit
+the command line arg parsing routine for this). It should use the
+purchase price as public input for verification.</li>
+</ol>
+<p>Once you’re done, the verify command should output “Prove verified
+successfully.”</p>
+<h1 id="acknowledgements">Acknowledgements</h1>
+<p>This exercise was adapted from the <a
+href="https://github.com/arkworks-rs/r1cs-tutorial/tree/5d3a9022fb6deade245505748fd661278e9c0ff9/merkle-tree-example">arkworks
+Merkle tree exercise</a>, originally written by Pratyush Mishra.</p>
+</body>
+</html>
