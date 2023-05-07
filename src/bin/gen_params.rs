@@ -1,5 +1,5 @@
 use arkworks_merkle_tree_example::{
-    constraints::PossessionCircuit,
+    constraints::AnalysisCircuit,
     hash::{LeafHash, TwoToOneHash},
     merkle::{Leaf},
     util::{
@@ -41,17 +41,17 @@ fn main() {
     let zero_leaf: Leaf = [0u8; 64];
 
     // Now construct the circuit with all the random values
-    let circuit = PossessionCircuit {
+    let circuit = AnalysisCircuit {
         // Constants that the circuit needs
         leaf_crh_params,
         two_to_one_crh_params,
 
         // Public inputs to the circuit
-        leaf: zero_leaf.to_vec(),
+        commitment: zero_leaf.to_vec(),
 
         // Commitment opening details
-        card_com_rand: F::rand(&mut rng),       // Another field elememnt
-        card_purchase_price: F::from(543), // Another field element
+        data_com_rand: F::rand(&mut rng),       // Another field elememnt
+        data_purchase_price: F::from(543), // Another field element
     };
 
     // Generate the Groth16 proving and verifying key and write to files

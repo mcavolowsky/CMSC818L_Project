@@ -21,29 +21,29 @@ pub const POSSESSION_REVEALED_SERIAL_FILENAME: &str = "possession_revealed_seria
 
 pub const PEDERSEN_PARAMS_FILENAME: &str = "pedersen_params.bin";
 
-/// A helper function that deterministically creates 16 baseball cards and their commitment
+/// A helper function that deterministically creates 16 baseball data and their commitment
 /// randomness
-fn all_cards() -> Vec<(Data, F)> {
+fn all_data() -> Vec<(Data, F)> {
     // Use a deterministic RNG
     let mut rng = ark_std::test_rng();
 
     core::iter::repeat_with(|| {
-        let card = Data::rand(&mut rng);
-        let card_com_rand = F::rand(&mut rng);
-        (card, card_com_rand)
+        let data = Data::rand(&mut rng);
+        let data_com_rand = F::rand(&mut rng);
+        (data, data_com_rand)
     })
     .take(16)
     .collect()
 }
 
-/// Returns a Merkle tree of all the cards generated above for our test
+/// Returns a Merkle tree of all the data generated above for our test
 pub fn gen_test_tree(
     leaf_crh_params: &LeafHashParams,
     two_to_one_crh_params: &TwoToOneHashParams,
 ) -> SimpleMerkleTree {
-    let leaves: Vec<Leaf> = all_cards()
+    let leaves: Vec<Leaf> = all_data()
         .into_iter()
-        .map(|(card, com_rand)| card.commit(&leaf_crh_params, &com_rand))
+        .map(|(data, com_rand)| data.commit(&leaf_crh_params, &com_rand))
         .collect();
 
     SimpleMerkleTree::new(&leaf_crh_params, &two_to_one_crh_params, leaves).unwrap()
@@ -52,13 +52,13 @@ pub fn gen_test_tree(
 /// Unfortuantely you can't get leaves out of trees, so we need a separate function for returning
 /// the i-th leaf.
 pub fn get_test_leaf(leaf_crh_params: &LeafHashParams, i: usize) -> Leaf {
-    let (card, com_rand) = all_cards().get(i).unwrap().clone();
-    card.commit(&leaf_crh_params, &com_rand)
+    let (data, com_rand) = all_data().get(i).unwrap().clone();
+    data.commit(&leaf_crh_params, &com_rand)
 }
 
-/// Returns the i-th card and commitment randomness in the test tree.
-pub fn get_test_card(i: usize) -> (Data, F) {
-    all_cards().get(i).unwrap().clone()
+/// Returns the i-th data and commitment randomness in the test tree.
+pub fn get_test_data(i: usize) -> (Data, F) {
+    all_data().get(i).unwrap().clone()
 }
 
 pub fn write_to_file<S: CanonicalSerialize>(path_str: &str, data: &S) {

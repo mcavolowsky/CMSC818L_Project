@@ -1,8 +1,8 @@
 use arkworks_merkle_tree_example::{
-    constraints::PossessionCircuit,
+    constraints::AnalysisCircuit,
     merkle::MerkleRoot,
     util::{
-        gen_test_tree, get_test_card, get_test_leaf, read_from_file, write_to_file,
+        gen_test_tree, get_test_data, get_test_leaf, read_from_file, write_to_file,
         POSSESSION_PROOF_FILENAME, POSSESSION_REVEALED_SERIAL_FILENAME, POSSESSION_VK_FILENAME,
     },
     E,
@@ -62,31 +62,31 @@ fn main() {
         root, given_merkle_root,
         "The Merkle root I'm trying to use is different than the one you gave me"
     );
-    // Also imagine we possess the card that appears at index 7 in the tree
+    // Also imagine we possess the data that appears at index 7 in the tree
     let our_idx = 7;
-    let (card, card_com_rand) = get_test_card(our_idx);
+    let (data, data_com_rand) = get_test_data(our_idx);
 
     //
     // Now generate a proof
     //
 
-    // We'll prove membership of our card, i.e., the 7th item in the tree
+    // We'll prove membership of our data, i.e., the 7th item in the tree
     let idx_to_prove = our_idx;
     let claimed_leaf = &get_test_leaf(&leaf_crh_params, idx_to_prove);
 
     // We now have everything we need to build the PossessionCircuit
-    let circuit = PossessionCircuit {
+    let circuit = AnalysisCircuit {
         // Constants that the circuit needs
         leaf_crh_params,
         two_to_one_crh_params,
 
         // Public inputs to the circuit
-        leaf: claimed_leaf.to_vec(),
+        commitment: claimed_leaf.to_vec(),
 
         // Witness to membership
         // Commitment opening details
-        card_com_rand: card_com_rand,       // The card's nonce
-        card_purchase_price: card.purchase_price, // The cards' purchase price
+        data_com_rand: data_com_rand,       // The data's nonce
+        data_purchase_price: data.purchase_price, // The datas' purchase price
     };
 
     // Create the proof
