@@ -27,12 +27,18 @@ pub struct AnalysisCircuit {
 
     // Public inputs to the circuit
     /// The leaf in that tree. In our case, the leaf is also a commitment to the data we're showing
-    pub commitment: Vec<u8>,
+    pub commitment: Vec<Vec<u8>>,
     // Private inputs (aka "witnesses") for the circuit
     /// The amount the data was purchased for
-    pub data_purchase_price: F,
+    pub data_purchase_price: Vec<F>,
     /// The private randomness used to commit to the data
-    pub data_com_rand: F,
+    pub data_com_rand: Vec<F>,
+}
+
+pub struct DataCheck{
+    pub claimed_data_com_var = UInt8::new_witness_vec(ns!(cs, "data com"), &self.commitment)?;
+    pub FV::new_witness(ns!(cs, "data purchase_price"), || Ok(&self.data_purchase_price))?;
+    pub FV::new_witness(ns!(cs, "data comm_rand"), || Ok(&self.data_purchase_price))?;
 }
 
 /// generate_constraints is where the circuit functionality is defined. It doesn't return any
@@ -53,17 +59,56 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         //
 
         // Card commitment. This is also the leaf in our tree.
-        let claimed_data_com_var = UInt8::new_witness_vec(ns!(cs, "data com"), &self.commitment)?;
+        // let claimed_data_com_var = UInt8::new_witness_vec(ns!(cs, "data com"), &self.commitment)?;
+
+        let data_claimed_com_res: Result<Vec<_>, _>= self
+                .commitment
+                .iter()
+                .enumerate()
+                .map(|(i, com_rand)| {
+                    UInt8::new_witness_vec(
+                        ns!(cs, "data claimed_comm"),
+                    &com_rand,
+                    )
+                })
+                .collect();
+        let data_claimed_com = data_claimed_com_res.unwrap();
+
 
         //
         // Now we witness our private inputs
         //
 
         // The amount the data was purchase for
-        let data_purchase_price =
-            FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price))?;
+        //let data_purchase_price =
+        //    FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price))?;
+        let data_purchase_price_res: Result<Vec<FV>, _> = self
+                .data_purchase_price
+                .iter()
+                .enumerate()
+                .map(|(i, com_rand)| {
+                    FV::new_witness(
+                        ns!(cs, "data purchase_price"),
+                        || Ok(com_rand),
+                    )
+                })
+                .collect();
+        let data_purchase_price = data_purchase_price_res.unwrap();
+
+
         // Commitment randomness
-        let com_rand_var = FV::new_witness(ns!(cs, "data com_rand"), || Ok(&self.data_com_rand))?;
+        let com_rand_var_res: Result<Vec<FV>, _> = self
+                .data_com_rand
+                .iter()
+                .enumerate()
+                .map(|(i, com_rand)| {
+                    FV::new_witness(
+                        ns!(cs, "data comm_rand"),
+                        || Ok(com_rand),
+                    )
+                })
+                .collect();
+        let com_rand_var = com_rand_var_res.unwrap();
 
         //
         // Ok everything has been inputted. Now we do the logic of the circuit.
