@@ -81,12 +81,55 @@ fn main() {
         two_to_one_crh_params,
 
         // Public inputs to the circuit
-        commitment: claimed_leaf.to_vec(),
+        com_jan: claimed_leaf.to_vec(),
+        com_feb: claimed_leaf.to_vec(),
+        com_mar: claimed_leaf.to_vec(),
+
+        com_apr: claimed_leaf.to_vec(),
+        com_may: claimed_leaf.to_vec(),
+        com_jun: claimed_leaf.to_vec(),
+
+        com_jul: claimed_leaf.to_vec(),
+        com_aug: claimed_leaf.to_vec(),
+        com_sep: claimed_leaf.to_vec(),
+
+        com_oct: claimed_leaf.to_vec(),
+        com_nov: claimed_leaf.to_vec(),
+        com_dec: claimed_leaf.to_vec(),
 
         // Witness to membership
         // Commitment opening details
-        data_com_rand: data_com_rand,       // The data's nonce
-        data_purchase_price: data.purchase_price, // The datas' purchase price
+        data_com_rand_jan: data_com_rand,       // The data's nonce
+        data_com_rand_feb: data_com_rand,       // The data's nonce
+        data_com_rand_mar: data_com_rand,       // The data's nonce
+
+        data_com_rand_apr: data_com_rand,       // The data's nonce
+        data_com_rand_may: data_com_rand,       // The data's nonce
+        data_com_rand_jun: data_com_rand,       // The data's nonce
+
+        data_com_rand_jul: data_com_rand,       // The data's nonce
+        data_com_rand_aug: data_com_rand,       // The data's nonce
+        data_com_rand_sep: data_com_rand,       // The data's nonce
+
+        data_com_rand_oct: data_com_rand,       // The data's nonce
+        data_com_rand_nov: data_com_rand,       // The data's nonce
+        data_com_rand_dec: data_com_rand,       // The data's nonce
+
+        data_purchase_price_jan: data.purchase_price, // The datas' purchase price
+        data_purchase_price_feb: data.purchase_price, // The datas' purchase price
+        data_purchase_price_mar: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_apr: data.purchase_price, // The datas' purchase price
+        data_purchase_price_may: data.purchase_price, // The datas' purchase price
+        data_purchase_price_jun: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_jul: data.purchase_price, // The datas' purchase price
+        data_purchase_price_aug: data.purchase_price, // The datas' purchase price
+        data_purchase_price_sep: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_oct: data.purchase_price, // The datas' purchase price
+        data_purchase_price_nov: data.purchase_price, // The datas' purchase price
+        data_purchase_price_dec: data.purchase_price, // The datas' purchase price
     };
 
     // Create the proof

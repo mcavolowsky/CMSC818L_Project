@@ -27,18 +27,56 @@ pub struct AnalysisCircuit {
 
     // Public inputs to the circuit
     /// The leaf in that tree. In our case, the leaf is also a commitment to the data we're showing
-    pub commitment: Vec<Vec<u8>>,
+    pub com_jan: Vec<u8>,
+    pub com_feb: Vec<u8>,
+    pub com_mar: Vec<u8>,
+
+    pub com_apr: Vec<u8>,
+    pub com_may: Vec<u8>,
+    pub com_jun: Vec<u8>,
+
+    pub com_jul: Vec<u8>,
+    pub com_aug: Vec<u8>,
+    pub com_sep: Vec<u8>,
+
+    pub com_oct: Vec<u8>,
+    pub com_nov: Vec<u8>,
+    pub com_dec: Vec<u8>,
+
     // Private inputs (aka "witnesses") for the circuit
     /// The amount the data was purchased for
-    pub data_purchase_price: Vec<F>,
+    pub data_purchase_price_jan: F,
+    pub data_purchase_price_feb: F,
+    pub data_purchase_price_mar: F,
+    
+    pub data_purchase_price_apr: F,
+    pub data_purchase_price_may: F,
+    pub data_purchase_price_jun: F,
+    
+    pub data_purchase_price_jul: F,
+    pub data_purchase_price_aug: F,
+    pub data_purchase_price_sep: F,
+    
+    pub data_purchase_price_oct: F,
+    pub data_purchase_price_nov: F,
+    pub data_purchase_price_dec: F,
+    
     /// The private randomness used to commit to the data
-    pub data_com_rand: Vec<F>,
-}
+    pub data_com_rand_jan: F,
+    pub data_com_rand_feb: F,
+    pub data_com_rand_mar: F,
 
-pub struct DataCheck{
-    pub claimed_data_com_var = UInt8::new_witness_vec(ns!(cs, "data com"), &self.commitment)?;
-    pub FV::new_witness(ns!(cs, "data purchase_price"), || Ok(&self.data_purchase_price))?;
-    pub FV::new_witness(ns!(cs, "data comm_rand"), || Ok(&self.data_purchase_price))?;
+    pub data_com_rand_apr: F,
+    pub data_com_rand_may: F,
+    pub data_com_rand_jun: F,
+
+    pub data_com_rand_jul: F,
+    pub data_com_rand_aug: F,
+    pub data_com_rand_sep: F,
+
+    pub data_com_rand_oct: F,
+    pub data_com_rand_nov: F,
+    pub data_com_rand_dec: F,
 }
 
 /// generate_constraints is where the circuit functionality is defined. It doesn't return any
@@ -59,65 +97,80 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         //
 
         // Card commitment. This is also the leaf in our tree.
-        // let claimed_data_com_var = UInt8::new_witness_vec(ns!(cs, "data com"), &self.commitment)?;
+        let claimed_data_com_var_jan = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_jan)?;
+        let claimed_data_com_var_feb = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_feb)?;
+        let claimed_data_com_var_mar = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_mar)?;
 
-        let data_claimed_com_res: Result<Vec<_>, _>= self
-                .commitment
-                .iter()
-                .enumerate()
-                .map(|(i, com_rand)| {
-                    UInt8::new_witness_vec(
-                        ns!(cs, "data claimed_comm"),
-                    &com_rand,
-                    )
-                })
-                .collect();
-        let data_claimed_com = data_claimed_com_res.unwrap();
+        let claimed_data_com_var_apr = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_apr)?;
+        let claimed_data_com_var_may = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_may)?;
+        let claimed_data_com_var_jun = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_jun)?;
 
+        let claimed_data_com_var_jul = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_jul)?;
+        let claimed_data_com_var_aug = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_aug)?;
+        let claimed_data_com_var_sep = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_sep)?;
+
+        let claimed_data_com_var_oct = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_oct)?;
+        let claimed_data_com_var_nov = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_nov)?;
+        let claimed_data_com_var_dec = UInt8::new_witness_vec(ns!(cs, "data com"), &self.com_dec)?;
 
         //
         // Now we witness our private inputs
         //
 
         // The amount the data was purchase for
-        //let data_purchase_price =
-        //    FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price))?;
-        let data_purchase_price_res: Result<Vec<FV>, _> = self
-                .data_purchase_price
-                .iter()
-                .enumerate()
-                .map(|(i, com_rand)| {
-                    FV::new_witness(
-                        ns!(cs, "data purchase_price"),
-                        || Ok(com_rand),
-                    )
-                })
-                .collect();
-        let data_purchase_price = data_purchase_price_res.unwrap();
+        let data_purchase_price_jan = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_jan))?;
+        let data_purchase_price_feb = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_feb))?;
+        let data_purchase_price_mar = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_mar))?;
+
+        let data_purchase_price_apr = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_apr))?;
+        let data_purchase_price_may = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_may))?;
+        let data_purchase_price_jun = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_jun))?;
+
+        let data_purchase_price_jul = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_jul))?;
+        let data_purchase_price_aug = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_aug))?;
+        let data_purchase_price_sep = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_sep))?;
+
+        let data_purchase_price_oct = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_oct))?;
+        let data_purchase_price_nov = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_nov))?;
+        let data_purchase_price_dec = FV::new_witness(ns!(cs, "purchase price"), || Ok(&self.data_purchase_price_dec))?;
 
 
-        // Commitment randomness
-        let com_rand_var_res: Result<Vec<FV>, _> = self
-                .data_com_rand
-                .iter()
-                .enumerate()
-                .map(|(i, com_rand)| {
-                    FV::new_witness(
-                        ns!(cs, "data comm_rand"),
-                        || Ok(com_rand),
-                    )
-                })
-                .collect();
-        let com_rand_var = com_rand_var_res.unwrap();
+        let data_com_rand_jan = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_jan))?;
+        let data_com_rand_feb = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_feb))?;
+        let data_com_rand_mar = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_mar))?;
+
+        let data_com_rand_apr = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_apr))?;
+        let data_com_rand_may = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_may))?;
+        let data_com_rand_jun = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_jun))?;
+
+        let data_com_rand_jul = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_jul))?;
+        let data_com_rand_aug = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_aug))?;
+        let data_com_rand_sep = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_sep))?;
+
+        let data_com_rand_oct = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_oct))?;
+        let data_com_rand_nov = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_nov))?;
+        let data_com_rand_dec = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_dec))?;
 
         //
         // Ok everything has been inputted. Now we do the logic of the circuit.
         //
 
         // Put the pieces of our data together into a CardVar
-        let data_var = DataVar {
-            amount: data_purchase_price,
-        };
+        let data_var_jan = DataVar {amount: data_purchase_price_jan};
+        let data_var_feb = DataVar {amount: data_purchase_price_feb};
+        let data_var_mar = DataVar {amount: data_purchase_price_mar};
+
+        let data_var_apr = DataVar {amount: data_purchase_price_apr};
+        let data_var_may = DataVar {amount: data_purchase_price_may};
+        let data_var_jun = DataVar {amount: data_purchase_price_jun};
+
+        let data_var_jul = DataVar {amount: data_purchase_price_jul};
+        let data_var_aug = DataVar {amount: data_purchase_price_aug};
+        let data_var_sep = DataVar {amount: data_purchase_price_sep};
+
+        let data_var_oct = DataVar {amount: data_purchase_price_oct};
+        let data_var_nov = DataVar {amount: data_purchase_price_nov};
+        let data_var_dec = DataVar {amount: data_purchase_price_dec};
 
         // CHECK #1: Card opening.
         // We "open" the data commitment here. Concretely, we compute the commitment of our
@@ -125,9 +178,38 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         // known commitment.
 
         // Generate a commitment to the message
-        let computed_data_comm_var = data_var.commit(&leaf_crh_params, &com_rand_var);
+        let computed_data_comm_var_jan = data_var_jan.commit(&leaf_crh_params, &data_com_rand_jan);
+        let computed_data_comm_var_feb = data_var_feb.commit(&leaf_crh_params, &data_com_rand_feb);
+        let computed_data_comm_var_mar = data_var_mar.commit(&leaf_crh_params, &data_com_rand_mar);
+
+        let computed_data_comm_var_apr = data_var_apr.commit(&leaf_crh_params, &data_com_rand_apr);
+        let computed_data_comm_var_may = data_var_may.commit(&leaf_crh_params, &data_com_rand_may);
+        let computed_data_comm_var_jun = data_var_jun.commit(&leaf_crh_params, &data_com_rand_jun);
+
+        let computed_data_comm_var_jul = data_var_jul.commit(&leaf_crh_params, &data_com_rand_jul);
+        let computed_data_comm_var_aug = data_var_aug.commit(&leaf_crh_params, &data_com_rand_aug);
+        let computed_data_comm_var_sep = data_var_sep.commit(&leaf_crh_params, &data_com_rand_sep);
+
+        let computed_data_comm_var_oct = data_var_oct.commit(&leaf_crh_params, &data_com_rand_oct);
+        let computed_data_comm_var_nov = data_var_nov.commit(&leaf_crh_params, &data_com_rand_nov);
+        let computed_data_comm_var_dec = data_var_dec.commit(&leaf_crh_params, &data_com_rand_dec);
+
         // Verify the commitment
-        claimed_data_com_var.enforce_equal(&computed_data_comm_var.unwrap())?;
+        claimed_data_com_var_jan.enforce_equal(&computed_data_comm_var_jan.unwrap())?;
+        claimed_data_com_var_feb.enforce_equal(&computed_data_comm_var_feb.unwrap())?;
+        claimed_data_com_var_mar.enforce_equal(&computed_data_comm_var_mar.unwrap())?;
+
+        claimed_data_com_var_apr.enforce_equal(&computed_data_comm_var_apr.unwrap())?;
+        claimed_data_com_var_may.enforce_equal(&computed_data_comm_var_may.unwrap())?;
+        claimed_data_com_var_jun.enforce_equal(&computed_data_comm_var_jun.unwrap())?;
+
+        claimed_data_com_var_jul.enforce_equal(&computed_data_comm_var_jul.unwrap())?;
+        claimed_data_com_var_aug.enforce_equal(&computed_data_comm_var_aug.unwrap())?;
+        claimed_data_com_var_sep.enforce_equal(&computed_data_comm_var_sep.unwrap())?;
+
+        claimed_data_com_var_oct.enforce_equal(&computed_data_comm_var_oct.unwrap())?;
+        claimed_data_com_var_nov.enforce_equal(&computed_data_comm_var_nov.unwrap())?;
+        claimed_data_com_var_dec.enforce_equal(&computed_data_comm_var_dec.unwrap())?;
 
         // other code goes here
         
@@ -179,12 +261,56 @@ mod test {
             leaf_crh_params,
             two_to_one_crh_params,
 
-            // Public inputs
-            commitment: claimed_leaf.to_vec(),
+        // Public inputs to the circuit
+        com_jan: claimed_leaf.to_vec(),
+        com_feb: claimed_leaf.to_vec(),
+        com_mar: claimed_leaf.to_vec(),
 
-            // Private inputs
-            data_purchase_price: data.purchase_price,
-            data_com_rand,
+        com_apr: claimed_leaf.to_vec(),
+        com_may: claimed_leaf.to_vec(),
+        com_jun: claimed_leaf.to_vec(),
+
+        com_jul: claimed_leaf.to_vec(),
+        com_aug: claimed_leaf.to_vec(),
+        com_sep: claimed_leaf.to_vec(),
+
+        com_oct: claimed_leaf.to_vec(),
+        com_nov: claimed_leaf.to_vec(),
+        com_dec: claimed_leaf.to_vec(),
+
+        // Witness to membership
+        // Commitment opening details
+        data_com_rand_jan: data_com_rand,       // The data's nonce
+        data_com_rand_feb: data_com_rand,       // The data's nonce
+        data_com_rand_mar: data_com_rand,       // The data's nonce
+
+        data_com_rand_apr: data_com_rand,       // The data's nonce
+        data_com_rand_may: data_com_rand,       // The data's nonce
+        data_com_rand_jun: data_com_rand,       // The data's nonce
+
+        data_com_rand_jul: data_com_rand,       // The data's nonce
+        data_com_rand_aug: data_com_rand,       // The data's nonce
+        data_com_rand_sep: data_com_rand,       // The data's nonce
+
+        data_com_rand_oct: data_com_rand,       // The data's nonce
+        data_com_rand_nov: data_com_rand,       // The data's nonce
+        data_com_rand_dec: data_com_rand,       // The data's nonce
+
+        data_purchase_price_jan: data.purchase_price, // The datas' purchase price
+        data_purchase_price_feb: data.purchase_price, // The datas' purchase price
+        data_purchase_price_mar: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_apr: data.purchase_price, // The datas' purchase price
+        data_purchase_price_may: data.purchase_price, // The datas' purchase price
+        data_purchase_price_jun: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_jul: data.purchase_price, // The datas' purchase price
+        data_purchase_price_aug: data.purchase_price, // The datas' purchase price
+        data_purchase_price_sep: data.purchase_price, // The datas' purchase price
+
+        data_purchase_price_oct: data.purchase_price, // The datas' purchase price
+        data_purchase_price_nov: data.purchase_price, // The datas' purchase price
+        data_purchase_price_dec: data.purchase_price, // The datas' purchase price
         }
     }
 
@@ -212,7 +338,7 @@ mod test {
         // Make a new circuit and maul its purchase price
         let mut rng = ark_std::test_rng();
         let mut bad_data_circuit = setup(&mut rng);
-        bad_data_circuit.data_purchase_price = F::rand(&mut rng);
+        bad_data_circuit.data_purchase_price_jan = F::rand(&mut rng);
 
         // Run the circuit on a fresh constraint system
         let cs = ConstraintSystem::new_ref();

@@ -47,11 +47,54 @@ fn main() {
         two_to_one_crh_params,
 
         // Public inputs to the circuit
-        commitment: zero_leaf.to_vec(),
+        com_jan: zero_leaf.to_vec(),
+        com_feb: zero_leaf.to_vec(),
+        com_mar: zero_leaf.to_vec(),
+
+        com_apr: zero_leaf.to_vec(),
+        com_may: zero_leaf.to_vec(),
+        com_jun: zero_leaf.to_vec(),
+
+        com_jul: zero_leaf.to_vec(),
+        com_aug: zero_leaf.to_vec(),
+        com_sep: zero_leaf.to_vec(),
+
+        com_oct: zero_leaf.to_vec(),
+        com_nov: zero_leaf.to_vec(),
+        com_dec: zero_leaf.to_vec(),
 
         // Commitment opening details
-        data_com_rand: F::rand(&mut rng),       // Another field elememnt
-        data_purchase_price: F::from(543), // Another field element
+        data_com_rand_jan: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_feb: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_mar: F::rand(&mut rng),       // Another field elememnt
+
+        data_com_rand_apr: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_may: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_jun: F::rand(&mut rng),       // Another field elememnt
+
+        data_com_rand_jul: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_aug: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_sep: F::rand(&mut rng),       // Another field elememnt
+
+        data_com_rand_oct: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_nov: F::rand(&mut rng),       // Another field elememnt
+        data_com_rand_dec: F::rand(&mut rng),       // Another field elememnt
+
+        data_purchase_price_jan: F::from(543), // Another field element
+        data_purchase_price_feb: F::from(543), // Another field element
+        data_purchase_price_mar: F::from(543), // Another field element
+
+        data_purchase_price_apr: F::from(543), // Another field element
+        data_purchase_price_may: F::from(543), // Another field element
+        data_purchase_price_jun: F::from(543), // Another field element
+
+        data_purchase_price_jul: F::from(543), // Another field element
+        data_purchase_price_aug: F::from(543), // Another field element
+        data_purchase_price_sep: F::from(543), // Another field element
+
+        data_purchase_price_oct: F::from(543), // Another field element
+        data_purchase_price_nov: F::from(543), // Another field element
+        data_purchase_price_dec: F::from(543), // Another field element
     };
 
     // Generate the Groth16 proving and verifying key and write to files
