@@ -232,7 +232,7 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         // other code goes here
 
         // compute sum value
-        let computed_sum_purchase_prices = cs.new_witness_variable(|| { let tmp = 
+        let computed_sum_purchase_prices = FV::new_witness(ns!(cs, "intermediate calcs"), || { let tmp = 
                                                                             self.data_purchase_price_jan + 
                                                                             self.data_purchase_price_feb + 
                                                                             self.data_purchase_price_mar + 
@@ -278,7 +278,7 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         data_purchase_price_dec.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
 
         // check sum value
-        //computed_sum_purchase_prices.enforce_equal(&output_purchase_price_avg)?;
+        computed_sum_purchase_prices.enforce_equal(&output_purchase_price_avg)?;
 
             // All done with the checks
         Ok(())
@@ -321,7 +321,7 @@ mod test {
         let idx_to_prove = our_idx;
         let claimed_leaf = get_test_leaf(&leaf_crh_params, idx_to_prove);
 
-        let claimed_avg = data.purchase_price*F::from(12u32)/F::from(12u32);
+        let claimed_avg = data.purchase_price*F::from(12u32);
 
         // We have everything we need. Build the circuit
         AnalysisCircuit {
