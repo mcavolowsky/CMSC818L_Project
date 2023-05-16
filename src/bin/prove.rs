@@ -5,7 +5,7 @@ use arkworks_merkle_tree_example::{
         gen_test_tree, get_test_data, get_test_leaf, read_from_file, write_to_file,
         POSSESSION_PROOF_FILENAME, POSSESSION_REVEALED_SERIAL_FILENAME, POSSESSION_VK_FILENAME,
     },
-    E,
+    E, F, 
 };
 
 use std::env;
@@ -74,6 +74,8 @@ fn main() {
     let idx_to_prove = our_idx;
     let claimed_leaf = &get_test_leaf(&leaf_crh_params, idx_to_prove);
 
+    let claimed_avg = data.purchase_price*F::from(12u32)/F::from(12u32);
+
     // We now have everything we need to build the PossessionCircuit
     let circuit = AnalysisCircuit {
         // Constants that the circuit needs
@@ -130,6 +132,11 @@ fn main() {
         data_purchase_price_oct: data.purchase_price, // The datas' purchase price
         data_purchase_price_nov: data.purchase_price, // The datas' purchase price
         data_purchase_price_dec: data.purchase_price, // The datas' purchase price
+
+        output_purchase_price_avg: claimed_avg,         // the output value
+
+        bounds_purchase_price_min: F::from(0),          // the minimum bounds
+        bounds_purchase_price_max: F::from(1000),       // the maximum bounds
     };
 
     // Create the proof

@@ -9,6 +9,7 @@ use arkworks_merkle_tree_example::{
     E, F,
 };
 
+
 use ark_crypto_primitives::crh::{CRHScheme, TwoToOneCRHScheme};
 use ark_ff::UniformRand;
 use ark_groth16::{generate_random_parameters, prepare_verifying_key, ProvingKey};
@@ -39,6 +40,8 @@ fn main() {
 
     // Make a uniform leaf
     let zero_leaf: Leaf = [0u8; 64];
+
+    let claimed_avg = F::from(1200u32);
 
     // Now construct the circuit with all the random values
     let circuit = AnalysisCircuit {
@@ -95,6 +98,12 @@ fn main() {
         data_purchase_price_oct: F::from(543), // Another field element
         data_purchase_price_nov: F::from(543), // Another field element
         data_purchase_price_dec: F::from(543), // Another field element
+
+        output_purchase_price_avg: claimed_avg,         // the output value
+
+        bounds_purchase_price_min: F::from(0),          // the minimum bounds
+        bounds_purchase_price_max: F::from(1000),       // the maximum bounds
+
     };
 
     // Generate the Groth16 proving and verifying key and write to files

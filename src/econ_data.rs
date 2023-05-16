@@ -55,7 +55,8 @@ impl Data {
 impl UniformRand for Data {
     fn rand<R: Rng + ?Sized>(rng: &mut R) -> Self {
         Data {
-            purchase_price: F::rand(rng),
+            purchase_price: F::from(500),
+            //purchase_price: F::rand(rng),
         }
     }
 }

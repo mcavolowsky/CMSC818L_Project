@@ -15,6 +15,7 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
+use core::cmp::Ordering;
 
 /// Our ZK circuit. This is what we will create and pass to the Groth16 prover in order to do a ZK
 /// proof of possession
@@ -77,6 +78,13 @@ pub struct AnalysisCircuit {
     pub data_com_rand_oct: F,
     pub data_com_rand_nov: F,
     pub data_com_rand_dec: F,
+
+    // The analysis output 
+    pub output_purchase_price_avg: F,
+
+    // The analysis bounds
+    pub bounds_purchase_price_min: F,
+    pub bounds_purchase_price_max: F,
 }
 
 /// generate_constraints is where the circuit functionality is defined. It doesn't return any
@@ -151,26 +159,36 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         let data_com_rand_nov = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_nov))?;
         let data_com_rand_dec = FV::new_witness(ns!(cs, "com rand"), || Ok(&self.data_com_rand_dec))?;
 
+        // create input for the result value
+
+        let output_purchase_price_avg = FV::new_input(ns!(cs, "purchase price result"), || Ok(&self.output_purchase_price_avg))?;
+
+        // create inputs for the threshold values
+
+        let bounds_purchase_price_min = FV::new_input(ns!(cs, "bounds purchase price"), || Ok(&self.bounds_purchase_price_min))?;
+        let bounds_purchase_price_max = FV::new_input(ns!(cs, "bounds purchase price"), || Ok(&self.bounds_purchase_price_max))?;
+
+
         //
         // Ok everything has been inputted. Now we do the logic of the circuit.
         //
 
         // Put the pieces of our data together into a CardVar
-        let data_var_jan = DataVar {amount: data_purchase_price_jan};
-        let data_var_feb = DataVar {amount: data_purchase_price_feb};
-        let data_var_mar = DataVar {amount: data_purchase_price_mar};
+        let data_var_jan = DataVar {amount: data_purchase_price_jan.clone()};
+        let data_var_feb = DataVar {amount: data_purchase_price_feb.clone()};
+        let data_var_mar = DataVar {amount: data_purchase_price_mar.clone()};
 
-        let data_var_apr = DataVar {amount: data_purchase_price_apr};
-        let data_var_may = DataVar {amount: data_purchase_price_may};
-        let data_var_jun = DataVar {amount: data_purchase_price_jun};
+        let data_var_apr = DataVar {amount: data_purchase_price_apr.clone()};
+        let data_var_may = DataVar {amount: data_purchase_price_may.clone()};
+        let data_var_jun = DataVar {amount: data_purchase_price_jun.clone()};
 
-        let data_var_jul = DataVar {amount: data_purchase_price_jul};
-        let data_var_aug = DataVar {amount: data_purchase_price_aug};
-        let data_var_sep = DataVar {amount: data_purchase_price_sep};
+        let data_var_jul = DataVar {amount: data_purchase_price_jul.clone()};
+        let data_var_aug = DataVar {amount: data_purchase_price_aug.clone()};
+        let data_var_sep = DataVar {amount: data_purchase_price_sep.clone()};
 
-        let data_var_oct = DataVar {amount: data_purchase_price_oct};
-        let data_var_nov = DataVar {amount: data_purchase_price_nov};
-        let data_var_dec = DataVar {amount: data_purchase_price_dec};
+        let data_var_oct = DataVar {amount: data_purchase_price_oct.clone()};
+        let data_var_nov = DataVar {amount: data_purchase_price_nov.clone()};
+        let data_var_dec = DataVar {amount: data_purchase_price_dec.clone()};
 
         // CHECK #1: Card opening.
         // We "open" the data commitment here. Concretely, we compute the commitment of our
@@ -212,9 +230,57 @@ impl ConstraintSynthesizer<F> for AnalysisCircuit {
         claimed_data_com_var_dec.enforce_equal(&computed_data_comm_var_dec.unwrap())?;
 
         // other code goes here
-        
 
-        // All done with the checks
+        // compute sum value
+        let computed_sum_purchase_prices = cs.new_witness_variable(|| { let tmp = 
+                                                                            self.data_purchase_price_jan + 
+                                                                            self.data_purchase_price_feb + 
+                                                                            self.data_purchase_price_mar + 
+                                                                            self.data_purchase_price_apr + 
+                                                                            self.data_purchase_price_may + 
+                                                                            self.data_purchase_price_jun + 
+                                                                            self.data_purchase_price_jul + 
+                                                                            self.data_purchase_price_aug + 
+                                                                            self.data_purchase_price_sep + 
+                                                                            self.data_purchase_price_oct + 
+                                                                            self.data_purchase_price_nov + 
+                                                                            self.data_purchase_price_dec;
+                                                                            Ok(tmp) })?;
+
+
+        // bounds constraints
+        data_purchase_price_jan.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_jan.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_feb.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_feb.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_mar.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_mar.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+
+        data_purchase_price_apr.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_apr.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_may.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_may.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_jun.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_jun.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+
+        data_purchase_price_jul.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_jul.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_aug.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_aug.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_sep.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_sep.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+
+        data_purchase_price_oct.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_oct.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_nov.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_nov.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+        data_purchase_price_dec.enforce_cmp(&bounds_purchase_price_min, Ordering::Greater, true)?;
+        data_purchase_price_dec.enforce_cmp(&bounds_purchase_price_max, Ordering::Less,    true)?;
+
+        // check sum value
+        //computed_sum_purchase_prices.enforce_equal(&output_purchase_price_avg)?;
+
+            // All done with the checks
         Ok(())
     }
 }
@@ -255,62 +321,69 @@ mod test {
         let idx_to_prove = our_idx;
         let claimed_leaf = get_test_leaf(&leaf_crh_params, idx_to_prove);
 
+        let claimed_avg = data.purchase_price*F::from(12u32)/F::from(12u32);
+
         // We have everything we need. Build the circuit
         AnalysisCircuit {
             // Constants for hashing
             leaf_crh_params,
             two_to_one_crh_params,
 
-        // Public inputs to the circuit
-        com_jan: claimed_leaf.to_vec(),
-        com_feb: claimed_leaf.to_vec(),
-        com_mar: claimed_leaf.to_vec(),
+            // Public inputs to the circuit
+            com_jan: claimed_leaf.to_vec(),
+            com_feb: claimed_leaf.to_vec(),
+            com_mar: claimed_leaf.to_vec(),
 
-        com_apr: claimed_leaf.to_vec(),
-        com_may: claimed_leaf.to_vec(),
-        com_jun: claimed_leaf.to_vec(),
+            com_apr: claimed_leaf.to_vec(),
+            com_may: claimed_leaf.to_vec(),
+            com_jun: claimed_leaf.to_vec(),
 
-        com_jul: claimed_leaf.to_vec(),
-        com_aug: claimed_leaf.to_vec(),
-        com_sep: claimed_leaf.to_vec(),
+            com_jul: claimed_leaf.to_vec(),
+            com_aug: claimed_leaf.to_vec(),
+            com_sep: claimed_leaf.to_vec(),
 
-        com_oct: claimed_leaf.to_vec(),
-        com_nov: claimed_leaf.to_vec(),
-        com_dec: claimed_leaf.to_vec(),
+            com_oct: claimed_leaf.to_vec(),
+            com_nov: claimed_leaf.to_vec(),
+            com_dec: claimed_leaf.to_vec(),
 
-        // Witness to membership
-        // Commitment opening details
-        data_com_rand_jan: data_com_rand,       // The data's nonce
-        data_com_rand_feb: data_com_rand,       // The data's nonce
-        data_com_rand_mar: data_com_rand,       // The data's nonce
+            // Witness to membership
+            // Commitment opening details
+            data_com_rand_jan: data_com_rand,       // The data's nonce
+            data_com_rand_feb: data_com_rand,       // The data's nonce
+            data_com_rand_mar: data_com_rand,       // The data's nonce
 
-        data_com_rand_apr: data_com_rand,       // The data's nonce
-        data_com_rand_may: data_com_rand,       // The data's nonce
-        data_com_rand_jun: data_com_rand,       // The data's nonce
+            data_com_rand_apr: data_com_rand,       // The data's nonce
+            data_com_rand_may: data_com_rand,       // The data's nonce
+            data_com_rand_jun: data_com_rand,       // The data's nonce
 
-        data_com_rand_jul: data_com_rand,       // The data's nonce
-        data_com_rand_aug: data_com_rand,       // The data's nonce
-        data_com_rand_sep: data_com_rand,       // The data's nonce
+            data_com_rand_jul: data_com_rand,       // The data's nonce
+            data_com_rand_aug: data_com_rand,       // The data's nonce
+            data_com_rand_sep: data_com_rand,       // The data's nonce
 
-        data_com_rand_oct: data_com_rand,       // The data's nonce
-        data_com_rand_nov: data_com_rand,       // The data's nonce
-        data_com_rand_dec: data_com_rand,       // The data's nonce
+            data_com_rand_oct: data_com_rand,       // The data's nonce
+            data_com_rand_nov: data_com_rand,       // The data's nonce
+            data_com_rand_dec: data_com_rand,       // The data's nonce
 
-        data_purchase_price_jan: data.purchase_price, // The datas' purchase price
-        data_purchase_price_feb: data.purchase_price, // The datas' purchase price
-        data_purchase_price_mar: data.purchase_price, // The datas' purchase price
+            data_purchase_price_jan: data.purchase_price, // The datas' purchase price
+            data_purchase_price_feb: data.purchase_price, // The datas' purchase price
+            data_purchase_price_mar: data.purchase_price, // The datas' purchase price
 
-        data_purchase_price_apr: data.purchase_price, // The datas' purchase price
-        data_purchase_price_may: data.purchase_price, // The datas' purchase price
-        data_purchase_price_jun: data.purchase_price, // The datas' purchase price
+            data_purchase_price_apr: data.purchase_price, // The datas' purchase price
+            data_purchase_price_may: data.purchase_price, // The datas' purchase price
+            data_purchase_price_jun: data.purchase_price, // The datas' purchase price
 
-        data_purchase_price_jul: data.purchase_price, // The datas' purchase price
-        data_purchase_price_aug: data.purchase_price, // The datas' purchase price
-        data_purchase_price_sep: data.purchase_price, // The datas' purchase price
+            data_purchase_price_jul: data.purchase_price, // The datas' purchase price
+            data_purchase_price_aug: data.purchase_price, // The datas' purchase price
+            data_purchase_price_sep: data.purchase_price, // The datas' purchase price
 
-        data_purchase_price_oct: data.purchase_price, // The datas' purchase price
-        data_purchase_price_nov: data.purchase_price, // The datas' purchase price
-        data_purchase_price_dec: data.purchase_price, // The datas' purchase price
+            data_purchase_price_oct: data.purchase_price, // The datas' purchase price
+            data_purchase_price_nov: data.purchase_price, // The datas' purchase price
+            data_purchase_price_dec: data.purchase_price, // The datas' purchase price
+
+            output_purchase_price_avg: claimed_avg,         // the output value
+
+            bounds_purchase_price_min: F::from(0),          // the minimum bounds
+            bounds_purchase_price_max: F::from(1000),       // the maximum bounds
         }
     }
 
@@ -319,6 +392,8 @@ mod test {
     fn data_correctness() {
         let mut rng = ark_std::test_rng();
         let circuit = setup(&mut rng);
+
+        println!("data_purchase_price_jan = {}",circuit.data_purchase_price_jan);
 
         // Run the circuit on a fresh constraint system
         let cs = ConstraintSystem::new_ref();
